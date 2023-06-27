@@ -9,18 +9,21 @@ const app = express();
 const stripe = Stripe(process.env.STRIPE_SK);
 
 app.use(express.static(path.join(process.cwd(), "public")));
-app.use(express.json());
+app.use("/create-checkout", express.json());
 
 const calcAmount = (cart) =>
   Object.values(cart).reduce((acc, item) => acc + item.totalPrice, 0);
 
 app.post("/create-checkout", async (req, res) => {
   const { cart } = req.body;
-  console.log(cart);
+  const customer = await stripe.customers.create();
   const paymentIntent = await stripe.paymentIntents.create({
+    customer: customer.id,
+    setup_future_usage: "off_session", // Tells Stripe how you plan to use the payment method
     amount: calcAmount(cart),
     currency: "usd",
     automatic_payment_methods: {
+      // Enables cards and other payment methods for us
       enabled: true,
     },
   });
@@ -29,6 +32,7 @@ app.post("/create-checkout", async (req, res) => {
 });
 
 app.get("/", (req, res) => {
+  // const {  } = req.query
   res.sendFile("index.html");
 });
 
@@ -56,6 +60,22 @@ app.get("/invalid_payment_intent", async (req, res) => {
       "invalid_payment_intent.html"
     )
   );
+});
+
+app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
+  const signature = req.headers["stripe-signature"];
+  const sec = process.env.STRIPE_WEBHOOK_SK;
+  let event = req.body;
+  try {
+    event = stripe.webhooks.constructEvent(req.body, signature, sec);
+  } catch (error) {
+    console.log(error);
+    return res.sendStatus(400);
+  }
+
+  console.log(event.data);
+
+  res.status(200).send();
 });
 
 app.listen(3000, () => {
