@@ -1,5 +1,6 @@
 const itemsListEl = document.getElementById("items-list");
 const totalEl = document.getElementById("total");
+const checkOutBtn = document.getElementById("check-out");
 
 const items = new Array(20).fill(0).map((_, index) => ({
   product_name: `Item ${index + 1}`,
@@ -67,12 +68,14 @@ function displayItemContent(item) {
 }
 
 function calcPrice(item, count) {
-  return item.price * count;
+  return Math.floor(item.price * count * 100);
 }
 
 function reduce(item, count) {
   if (count === 0) return null;
+
   count--;
+
   return {
     totalPrice: calcPrice(item, count),
     count,
@@ -100,17 +103,26 @@ function selectItem(item, action) {
   const operation = actions[action];
   const value = operation(item, count);
   if (value == null) return;
-
   cart[item.id] = value;
+
+  if (value.count === 0) delete cart[item.id];
+
   const li = document.querySelector(`li:nth-child(${item.id})`);
   li.innerHTML = displayItemContent(item);
   totalEl.innerHTML = updateTotal();
+  updateCheckOutBtn();
 }
 
 function updateTotal() {
   const value = Object.values(cart).reduce(
-    (acc, item) => Math.floor((acc + item.totalPrice) * 100) / 100,
+    (acc, item) => acc + item.totalPrice,
     0
   );
-  return "Total : " + value + " $";
+  return "Total : " + value / 100 + " $";
+}
+
+function updateCheckOutBtn() {
+  const isDisabled = Object.values(cart).length <= 0;
+  if (isDisabled) return checkOutBtn.setAttribute("disabled", true);
+  return checkOutBtn.removeAttribute("disabled");
 }
