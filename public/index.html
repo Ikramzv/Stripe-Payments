@@ -51,7 +51,7 @@
         [&.open]:z-50 [&.open]:opacity-100 [&.open>div]:translate-y-0 [&.open>div]:opacity-100 grid place-items-center
     ">
         <div class="relative translate-y-10 opacity-0 duration-500 delay-100 bg-white
-            w-[min(380px,100%)] h-[500px] rounded-md p-4">
+            w-[min(380px,100%)] h-[500px] rounded-md p-4 overflow-hidden">
             <div class="absolute inset-0 grid place-items-center -z-50 opacity-0 bg-white group-[.loading]:duration-200 
                 group-[.loading]:z-50 group-[.loading]:opacity-100">
                 <div class="hidden group-[.loading]:block">
@@ -62,6 +62,9 @@
                 <form id="payment-form" class="flex flex-col gap-3 overflow-hidden">
                     <div id="link-authentication-element"></div>
                     <div id="payment-element"></div>
+                    <div id="address-element"></div>
+                    <div id="payment-message" class="hidden text-red-800 text-sm">
+                    </div>
                     <button class="relative mt-3 w-full text-center border border-gray-200 rounded-md p-3
                         hover:bg-gray-100 duration-200 active:scale-[0.98] disabled:cursor-not-allowed" id="submit">
                         <div class="absolute inset-0 bg-white z-50 [.hidden]:-z-50 spinner grid place-items-center hidden"
@@ -70,8 +73,6 @@
                         </div>
                         <span class="button-text">Pay Now</span>
                     </button>
-                    <div id="payment-message" class="hidden text-red-800 text-sm">
-                    </div>
                 </form>
             </div>
         </div>

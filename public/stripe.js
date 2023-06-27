@@ -24,13 +24,16 @@ function setPaymentButtonLoading(isLoading) {
   else checkOutBtn.removeAttribute("disabled");
   spinner.classList.toggle("hidden", !isLoading);
 }
-
+let t;
 function showErrMessage(message) {
   paymentMessageEl.classList.remove("hidden");
   paymentMessageEl.textContent = message;
+  if (t) clearTimeout(t);
+  t = setTimeout(deleteErrMessage, 2500);
 }
 
 function deleteErrMessage() {
+  clearTimeout(t);
   paymentMessageEl.classList.add("hidden");
   paymentMessageEl.textContent = "";
 }
@@ -77,20 +80,25 @@ function setEmailAdress(value) {
 async function handleSubmit(e) {
   e.preventDefault();
   setPaymentButtonLoading(true);
-  const res = await stripe.confirmPayment({
-    elements,
-    confirmParams: {
-      receipt_email: emailAddress,
-      return_url: "http://localhost:3000/success",
-    },
-  });
-  console.log(res);
-  const { error } = res;
-
-  if (error.type === "card_error" || error.type === "validation_error") {
-    showErrMessage(error.message);
-  } else {
-    showErrMessage("An unexpected error occurred.");
+  const shipping = (await elements.getElement("address").getValue()).value;
+  console.log(shipping);
+  try {
+    const res = await stripe.confirmPayment({
+      elements,
+      confirmParams: {
+        receipt_email: emailAddress,
+        return_url: "http://localhost:3000/success",
+        shipping,
+      },
+    });
+    const { error } = res;
+    if (error.type === "card_error" || error.type === "validation_error") {
+      showErrMessage(error.message);
+    } else {
+      showErrMessage("An unexpected error occurred.");
+    }
+  } catch (error) {
+    console.log(error);
   }
 
   setPaymentButtonLoading(false);
@@ -110,10 +118,17 @@ async function createPaymentIntent() {
   const paymentIntent = await res.json();
   const { client_secret: clientSecret } = paymentIntent;
   const appearance = { theme: "stripe" };
-
-  setElements(stripe.elements({ appearance, clientSecret }));
+  const paymentMethodOrder = ["cash_app_pay", "card"];
+  setElements(
+    stripe.elements({
+      appearance,
+      clientSecret,
+      paymentMethodOrder,
+    })
+  );
   createLinkAuthenticationElement();
   createPaymentElement();
+  createAddressElement();
 }
 
 function createLinkAuthenticationElement() {
@@ -129,4 +144,10 @@ function createPaymentElement() {
   const paymentElementOptions = { layout: "tabs" };
   const paymentElement = elements.create("payment", paymentElementOptions);
   paymentElement.mount("#payment-element");
+}
+
+function createAddressElement() {
+  const addressElementOpions = { mode: "shipping" };
+  const addressElement = elements.create("address", addressElementOpions);
+  addressElement.mount("#address-element");
 }
