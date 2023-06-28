@@ -2,16 +2,19 @@ import { config as env } from "dotenv";
 import express from "express";
 import path from "path";
 import Stripe from "stripe";
+import { Cart } from "types";
 
 env();
 
 const app = express();
-const stripe = Stripe(process.env.STRIPE_SK);
+const stripe = new Stripe(process.env.STRIPE_SK as string, {
+  apiVersion: "2022-11-15",
+});
 
 app.use(express.static(path.join(process.cwd(), "public")));
 app.use("/create-checkout", express.json());
 
-const calcAmount = (cart) =>
+const calcAmount = (cart: Cart) =>
   Object.values(cart).reduce((acc, item) => acc + item.totalPrice, 0);
 
 app.post("/create-checkout", async (req, res) => {
@@ -28,7 +31,7 @@ app.post("/create-checkout", async (req, res) => {
     },
   });
 
-  res.status(201).json(paymentIntent);
+  return res.status(201).json(paymentIntent);
 });
 
 app.get("/", (req, res) => {
@@ -63,8 +66,8 @@ app.get("/invalid_payment_intent", async (req, res) => {
 });
 
 app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
-  const signature = req.headers["stripe-signature"];
-  const sec = process.env.STRIPE_WEBHOOK_SK;
+  const signature = req.headers["stripe-signature"] as string;
+  const sec = process.env.STRIPE_WEBHOOK_SK as string;
   let event = req.body;
   try {
     event = stripe.webhooks.constructEvent(req.body, signature, sec);
@@ -72,8 +75,6 @@ app.post("/webhook", express.raw({ type: "application/json" }), (req, res) => {
     console.log(error);
     return res.sendStatus(400);
   }
-
-  console.log(event.data);
 
   res.status(200).send();
 });
