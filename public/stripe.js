@@ -2,6 +2,7 @@ const modal = document.getElementById("modal");
 const modalContent = modal.querySelector("& > div");
 const paymentMessageEl = document.getElementById("payment-message");
 const spinner = document.getElementById("spinner");
+const paymenButtonEl = document.getElementById("payment-button");
 
 let ctrl = new AbortController();
 
@@ -20,8 +21,8 @@ function setModalLoading(isLoading) {
 }
 
 function setPaymentButtonLoading(isLoading) {
-  if (isLoading) checkOutBtn.setAttribute("disabled", true);
-  else checkOutBtn.removeAttribute("disabled");
+  if (isLoading) paymenButtonEl.setAttribute("disabled", true);
+  else paymenButtonEl.removeAttribute("disabled");
   spinner.classList.toggle("hidden", !isLoading);
 }
 let t;
@@ -81,7 +82,7 @@ async function handleSubmit(e) {
   e.preventDefault();
   setPaymentButtonLoading(true);
   const shipping = (await elements.getElement("address").getValue()).value;
-  console.log(shipping);
+
   try {
     const res = await stripe.confirmPayment({
       elements,
