@@ -2,7 +2,7 @@ const itemsListEl = document.getElementById("items-list");
 const totalEl = document.getElementById("total");
 const checkOutBtn = document.getElementById("check-out");
 
-const items = new Array(20).fill(0).map((_, index) => ({
+const items = new Array(250).fill(0).map((_, index) => ({
   product_name: `Item ${index + 1}`,
   price: parseFloat((Math.random() * 100).toFixed(2)),
   currency: {
